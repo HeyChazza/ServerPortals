@@ -1,14 +1,6 @@
-package net.yofuzzy3.BungeePortals.Listeners;
+package net.yofuzzy3.portals.listeners;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import net.yofuzzy3.BungeePortals.BungeePortals;
-import net.yofuzzy3.BungeePortals.Commands.CommandBPortals;
-
+import net.yofuzzy3.portals.Portals;
 import org.bukkit.ChatColor;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -18,13 +10,19 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 public class EventListener implements Listener {
 
-    private BungeePortals plugin;
+    private Portals plugin;
     private Map<String, Boolean> statusData = new HashMap<>();
     private HashMap<Player, Long> cooldown = new HashMap<Player, Long>();
 
-    public EventListener(BungeePortals plugin) {
+    public EventListener(Portals plugin) {
         this.plugin = plugin;
     }
 
@@ -44,37 +42,32 @@ public class EventListener implements Listener {
     }
 
     @EventHandler
-    public void onQuit (PlayerQuitEvent event) {
+    public void onQuit(PlayerQuitEvent event) {
         // Cleanup to prevent a memory leak
         Player player = event.getPlayer();
         String playerName = player.getName();
         cooldown.remove(player);
         statusData.remove(playerName);
-        CommandBPortals.selections.remove(playerName);
+        net.yofuzzy3.portals.commands.CommandPortals.selections.remove(playerName);
     }
 
     @EventHandler
-    public void onPlayerMove(PlayerMoveEvent event) throws IOException {
+    public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
         String playerName = player.getName();
         if (!statusData.containsKey(playerName)) {
             statusData.put(playerName, false);
         }
         Block block = player.getWorld().getBlockAt(player.getLocation());
-        String data = block.getWorld().getName() + "#" + String.valueOf(block.getX()) + "#" + String.valueOf(block.getY()) + "#" + String.valueOf(block.getZ());
+        String data = block.getWorld().getName() + "#" + block.getX() + "#" + block.getY() + "#" + block.getZ();
         if (plugin.portalData.containsKey(data)) {
             if (!statusData.get(playerName)) {
                 statusData.put(playerName, true);
                 if (CheckCooldown(player)) return;
                 String destination = plugin.portalData.get(data);
-                if (player.hasPermission("BungeePortals.portal." + destination) || player.hasPermission("BungeePortals.portal.*")) {
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    DataOutputStream dos = new DataOutputStream(baos);
-                    dos.writeUTF("Connect");
-                    dos.writeUTF(destination);
-                    player.sendPluginMessage(plugin, "BungeeCord", baos.toByteArray());
-                    baos.close();
-                    dos.close();
+                if (player.hasPermission("portals.portal." + destination) || player.hasPermission("portals.portal.*")) {
+                    // Do action stuff here
+
                     cooldown.put(player, System.currentTimeMillis());
                 } else {
                     player.sendMessage(plugin.configFile.getString("NoPortalPermissionMessage").replace("{destination}", destination).replaceAll("(&([a-f0-9l-or]))", "\u00A7$2"));

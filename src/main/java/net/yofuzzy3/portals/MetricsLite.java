@@ -26,7 +26,7 @@
  * either expressed or implied, of anybody else.
  */
 
-package net.yofuzzy3.BungeePortals;
+package net.yofuzzy3.portals;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Server;

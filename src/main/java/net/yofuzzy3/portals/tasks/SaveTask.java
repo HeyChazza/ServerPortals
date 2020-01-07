@@ -1,13 +1,13 @@
-package net.yofuzzy3.BungeePortals.Tasks;
+package net.yofuzzy3.portals.tasks;
 
-import net.yofuzzy3.BungeePortals.BungeePortals;
+import net.yofuzzy3.portals.Portals;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class SaveTask extends BukkitRunnable {
 
-    private BungeePortals plugin;
+    private Portals plugin;
 
-    public SaveTask(BungeePortals plugin) {
+    public SaveTask(Portals plugin) {
         this.plugin = plugin;
     }
 
