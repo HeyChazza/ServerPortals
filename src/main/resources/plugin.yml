@@ -1,13 +1,14 @@
 name: ${project.name}
 version: ${project.version}
 description: ${description}
-author: YoFuzzy3
+author: CodeItForYou
 main: ${package}
 softdepend: [WorldEdit]
 
 commands:
-  portals:
-    description: Do cool stuff.
+   cifyportals:
+    aliases: ["portals"]
+
 permissions:
   portals.command.BPortals:
     description: Allowed to access the command /BPortals.

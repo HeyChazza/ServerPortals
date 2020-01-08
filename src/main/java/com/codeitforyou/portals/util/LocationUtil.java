@@ -1,4 +1,4 @@
-package net.yofuzzy3.portals.util;
+package com.codeitforyou.portals.util;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -10,6 +10,6 @@ public class LocationUtil {
 
     public static Location fromString(String location) {
         String[] parts = location.split("#");
-        return new Location(Bukkit.getWorld(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2]), Integer.parseInt(parts[3]));
+        return new Location(Bukkit.getWorld(parts[0]), Double.parseDouble(parts[1]), Double.parseDouble(parts[2]), Double.parseDouble(parts[3]));
     }
 }

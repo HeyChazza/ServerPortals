@@ -1,7 +1,9 @@
-package net.yofuzzy3.portals.listeners;
+package com.codeitforyou.portals.listeners;
 
-import net.yofuzzy3.portals.Portals;
-import org.bukkit.ChatColor;
+import com.codeitforyou.portals.CIFYPortals;
+import com.codeitforyou.portals.api.Portal;
+import com.codeitforyou.portals.config.Lang;
+import com.codeitforyou.portals.util.Common;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -10,19 +12,16 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class EventListener implements Listener {
 
-    private Portals plugin;
+    private CIFYPortals plugin;
     private Map<String, Boolean> statusData = new HashMap<>();
     private HashMap<Player, Long> cooldown = new HashMap<Player, Long>();
 
-    public EventListener(Portals plugin) {
+    public EventListener(CIFYPortals plugin) {
         this.plugin = plugin;
     }
 
@@ -30,7 +29,11 @@ public class EventListener implements Listener {
         final int cooldelay = plugin.getConfig().getInt("CooldownSeconds");
         int diff = (int) ((System.currentTimeMillis() - cooldown.get(player)) / 1000);
         if (diff < cooldelay) {
-            player.sendMessage(ChatColor.RED + "Please wait " + ChatColor.YELLOW + (cooldelay - diff) + ChatColor.RED + " seconds until attempting to teleport again.");
+            final int cooldownTime = cooldelay - diff;
+            String cooldownMsg = Lang.COOLDOWN.asString(cooldownTime);
+
+            if (cooldownTime == 1) cooldownMsg = cooldownMsg.replace("seconds", "second");
+            player.sendMessage(cooldownMsg);
             return true;
         }
         return false;
@@ -48,7 +51,7 @@ public class EventListener implements Listener {
         String playerName = player.getName();
         cooldown.remove(player);
         statusData.remove(playerName);
-        net.yofuzzy3.portals.commands.CommandPortals.selections.remove(playerName);
+        Common.selections.remove(playerName);
     }
 
     @EventHandler
@@ -59,24 +62,19 @@ public class EventListener implements Listener {
             statusData.put(playerName, false);
         }
         Block block = player.getWorld().getBlockAt(player.getLocation());
-        String data = block.getWorld().getName() + "#" + block.getX() + "#" + block.getY() + "#" + block.getZ();
-        if (plugin.portalData.containsKey(data)) {
+        Portal portal = plugin.getPortalManager().getPortal(block.getLocation());
+
+        if (portal != null) {
             if (!statusData.get(playerName)) {
                 statusData.put(playerName, true);
                 if (CheckCooldown(player)) return;
-                String destination = plugin.portalData.get(data);
-                if (player.hasPermission("portals.portal." + destination) || player.hasPermission("portals.portal.*")) {
-                    // Do action stuff here
-
+                if (player.hasPermission("portals.portal." + portal.getId()) || player.hasPermission("portals.portal.*")) {
+                    plugin.getActionManager().runActions(player, portal.getActions());
                     cooldown.put(player, System.currentTimeMillis());
                 } else {
-                    player.sendMessage(plugin.configFile.getString("NoPortalPermissionMessage").replace("{destination}", destination).replaceAll("(&([a-f0-9l-or]))", "\u00A7$2"));
+                    Lang.NO_PERMISSION_PORTAL.send(player, portal.getId());
                 }
             }
-        } else {
-            if (statusData.get(playerName)) {
-                statusData.put(playerName, false);
-            }
-        }
+        } else if (statusData.get(playerName)) statusData.put(playerName, false);
     }
 }

@@ -1,13 +1,13 @@
-package net.yofuzzy3.portals.tasks;
+package com.codeitforyou.portals.tasks;
 
-import net.yofuzzy3.portals.Portals;
+import com.codeitforyou.portals.CIFYPortals;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class SaveTask extends BukkitRunnable {
 
-    private Portals plugin;
+    private CIFYPortals plugin;
 
-    public SaveTask(Portals plugin) {
+    public SaveTask(CIFYPortals plugin) {
         this.plugin = plugin;
     }
 

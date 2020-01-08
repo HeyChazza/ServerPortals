@@ -1,4 +1,4 @@
-package net.yofuzzy3.portals.api;
+package com.codeitforyou.portals.api;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -18,6 +18,10 @@ public class Portal {
         this.actions = new ArrayList<>();
     }
 
+    public String getId() {
+        return id;
+    }
+
     public void addLocation(final String world, final int x, final int y, final int z) {
         locations.add(new Location(Bukkit.getWorld(world), x, y, z));
     }
@@ -28,5 +32,17 @@ public class Portal {
 
     public void setActions(final List<String> actions) {
         this.actions = actions;
+    }
+
+    public void setLocations(final List<Location> locations) {
+        this.locations = locations;
+    }
+
+    public List<Location> getLocations() {
+        return locations;
+    }
+
+    public List<String> getActions() {
+        return actions;
     }
 }

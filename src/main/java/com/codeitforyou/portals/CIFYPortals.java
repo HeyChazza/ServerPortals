@@ -1,29 +1,35 @@
-package net.yofuzzy3.portals;
+package com.codeitforyou.portals;
 
 import com.codeitforyou.lib.api.actions.ActionManager;
+import com.codeitforyou.lib.api.command.CommandManager;
+import com.codeitforyou.portals.api.Portal;
+import com.codeitforyou.portals.api.PortalManager;
+import com.codeitforyou.portals.commands.MainCommand;
+import com.codeitforyou.portals.commands.sub.*;
+import com.codeitforyou.portals.config.Lang;
+import com.codeitforyou.portals.listeners.EventListener;
+import com.codeitforyou.portals.tasks.SaveTask;
+import com.codeitforyou.portals.util.LocationUtil;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
-import net.yofuzzy3.portals.api.Portal;
-import net.yofuzzy3.portals.api.PortalManager;
-import net.yofuzzy3.portals.listeners.EventListener;
-import net.yofuzzy3.portals.tasks.SaveTask;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
-public class Portals extends JavaPlugin {
+public class CIFYPortals extends JavaPlugin {
     private final ActionManager ACTION_MANAGER = new ActionManager(this);
     private final PortalManager PORTAL_MANAGER = new PortalManager();
 
+    private CommandManager COMMAND_MANAGER;
+
     private Logger logger = Bukkit.getLogger();
-    public Map<String, String> portalData = new HashMap<>();
     public WorldEditPlugin worldEdit;
     public YamlConfiguration configFile;
     private YamlConfiguration portalsFile;
@@ -36,6 +42,13 @@ public class Portals extends JavaPlugin {
         return PORTAL_MANAGER;
     }
 
+    public YamlConfiguration getPortalsFile() {
+        return portalsFile;
+    }
+
+    public CommandManager getCommandManager() {
+        return COMMAND_MANAGER;
+    }
 
     public void onEnable() {
         long time = System.currentTimeMillis();
@@ -43,11 +56,23 @@ public class Portals extends JavaPlugin {
             getPluginLoader().disablePlugin(this);
             throw new NullPointerException("[Portals] WorldEdit not found, disabling...");
         }
+
         ACTION_MANAGER.addDefaults();
 
         worldEdit = (WorldEditPlugin) getServer().getPluginManager().getPlugin("WorldEdit");
-        startMetrics();
-        getCommand("portals").setExecutor(new net.yofuzzy3.portals.commands.CommandPortals(this));
+
+        Lang.init(this);
+        logger.log(Level.INFO, "[Portals] Lang registered!");
+
+        COMMAND_MANAGER = new CommandManager(Arrays.asList(CreateCommand.class, ForceSaveCommand.class, HelpCommand.class, ReloadCommand.class, RemoveCommand.class), getDescription().getName().toLowerCase(), this);
+        COMMAND_MANAGER.setMainCommand(MainCommand.class);
+        CommandManager.Locale locale = CommandManager.getLocale();
+        locale.setNoPermission(Lang.NO_PERMISSION.asString());
+        locale.setPlayerOnly(Lang.PLAYER_ONLY.asString());
+        locale.setUnknownCommand(Lang.ERROR_INVALID_COMMAND.asString());
+        locale.setUsage(Lang.COMMAND_USAGE.asString("{usage}"));
+
+//        getCommand("portals").setExecutor(new net.yofuzzy3.portals.commands.CommandPortals(this));
         logger.log(Level.INFO, "[Portals] Commands registered!");
 
         getServer().getPluginManager().registerEvents(new EventListener(this), this);
@@ -70,16 +95,6 @@ public class Portals extends JavaPlugin {
         long time = System.currentTimeMillis();
         savePortalsData();
         logger.log(Level.INFO, "[Portals] Version " + getDescription().getVersion() + " has been disabled. (" + (System.currentTimeMillis() - time) + "ms)");
-    }
-
-    private void startMetrics() {
-        try {
-            MetricsLite metrics = new MetricsLite(this);
-            metrics.start();
-            logger.log(Level.INFO, "[Portals] Metrics initiated!");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private void createConfigFile(InputStream in, File file) {
@@ -120,34 +135,48 @@ public class Portals extends JavaPlugin {
         try {
             long time = System.currentTimeMillis();
 
+            System.out.println("Loading data..");
+
             final ConfigurationSection portalsSection = portalsFile.getConfigurationSection("portals");
 
             for (final String portalId : portalsSection.getKeys(false)) {
                 final ConfigurationSection portalSection = portalsSection.getConfigurationSection(portalId);
 
-                Portal portal = new Portal(portalId);
+                System.out.println("Loading portal " + portalId + "!");
+
+                Portal portal = getPortalManager().getPortal(portalId);
+                if (portal == null) portal = new Portal(portalId);
+                portal.setActions(portalSection.getStringList("actions"));
+                portal.setLocations(portalSection.getStringList(("locations")).stream().map(LocationUtil::fromString).collect(Collectors.toList()));
+                PORTAL_MANAGER.addPortal(portal);
             }
 
-            for (String key : portalsFile.getKeys(false)) {
-                String value = portalsFile.getString(key);
-                portalData.put(key, value);
-            }
             logger.log(Level.INFO, "[Portals] Portal data loaded! (" + (System.currentTimeMillis() - time) + "ms)");
         } catch (NullPointerException e) {
 
         }
     }
 
-    public void savePortalsData() {
-        long time = System.currentTimeMillis();
-        for (Entry<String, String> entry : portalData.entrySet()) {
-            portalsFile.set(entry.getKey(), entry.getValue());
-        }
+    public void savePortalsFile() {
         try {
             portalsFile.save(new File(getDataFolder(), "portals.yml"));
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void savePortalsData() {
+        long time = System.currentTimeMillis();
+
+        portalsFile.set("portals", null);
+
+        for (final Portal portal : getPortalManager().getPortals()) {
+            List<String> locs = portal.getLocations().stream().map(LocationUtil::toString).collect(Collectors.toList());
+            portalsFile.set("portals." + portal.getId() + ".actions", portal.getActions());
+            portalsFile.set("portals." + portal.getId() + ".locations", locs);
+        }
+
+        savePortalsFile();
         logger.log(Level.INFO, "[Portals] Portal data saved! (" + (System.currentTimeMillis() - time) + "ms)");
     }
 

@@ -1,14 +1,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>net.yofuzzy3</groupId>
+    <groupId>com.codeitforyou</groupId>
     <artifactId>portals</artifactId>
-    <version>1.2-snapshot</version>
-    <name>Portals</name>
+    <version>2.0</version>
+    <name>CIFYPortals</name>
 
     <properties>
         <package>${groupId}.${artifactId}.${name}</package>
-        <description>reate portals of any shape or size with WorldEdit, for BungeeCord.</description>
+        <description>Create portals of any shape or size with WorldEdit, for BungeeCord.</description>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -48,6 +48,7 @@
                     <artifactSet>
                         <includes>
                             <include>${project.groupId}:*</include>
+                            <include>com.codeitforyou:lib</include>
 						</includes>
                     </artifactSet>
                     <filters>
