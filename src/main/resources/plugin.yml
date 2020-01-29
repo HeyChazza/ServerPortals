@@ -5,10 +5,6 @@ author: CodeItForYou
 main: ${package}
 softdepend: [WorldEdit]
 
-commands:
-   cifyportals:
-    aliases: ["portals"]
-
 permissions:
   portals.command.BPortals:
     description: Allowed to access the command /BPortals.

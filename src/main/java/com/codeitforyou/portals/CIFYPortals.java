@@ -66,11 +66,16 @@ public class CIFYPortals extends JavaPlugin {
 
         COMMAND_MANAGER = new CommandManager(Arrays.asList(CreateCommand.class, ForceSaveCommand.class, HelpCommand.class, ReloadCommand.class, RemoveCommand.class), getDescription().getName().toLowerCase(), this);
         COMMAND_MANAGER.setMainCommand(MainCommand.class);
-        CommandManager.Locale locale = CommandManager.getLocale();
+
+        CommandManager.Locale locale = COMMAND_MANAGER.getLocale();
         locale.setNoPermission(Lang.NO_PERMISSION.asString());
         locale.setPlayerOnly(Lang.PLAYER_ONLY.asString());
         locale.setUnknownCommand(Lang.ERROR_INVALID_COMMAND.asString());
         locale.setUsage(Lang.COMMAND_USAGE.asString("{usage}"));
+
+        COMMAND_MANAGER.addAlias("portals");
+
+        COMMAND_MANAGER.register();
 
 //        getCommand("portals").setExecutor(new net.yofuzzy3.portals.commands.CommandPortals(this));
         logger.log(Level.INFO, "[Portals] Commands registered!");
